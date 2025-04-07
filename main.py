@@ -300,9 +300,7 @@ bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 @bot.event
 async def on_ready():
     print(f"✅ Bot đã sẵn sàng với tên {bot.user.name}!")
-    await bot.change_presence(
-        status=discord.Status.online,  # 👈 Thêm dòng này để hiện chấm xanh
-        activity=discord.Game(name="Discord RNG 2.0")
+    await bot.change_presence(activity=discord.Game(name="Discord RNG 2.0"))
     bot.add_view(PremiumRollView())
     bot.add_view(SuccessRollView())  # Đăng ký view cho roll thành công
     bot.add_view(RollAgainView())    # Đăng ký view cho roll trùng
