@@ -5,7 +5,6 @@ import random
 import time
 import json
 import os
-import datetime
 from keep_alive import keep_alive
 
 # ==================== Khởi động Flask server ====================
@@ -87,10 +86,6 @@ def init_player(user_id):
             if key not in player_data[str(user_id)]:
                 player_data[str(user_id)][key] = value
     save_game_data()
-    
-def get_daily_luck():
-    """Tính toán và trả về mức luck ngẫu nhiên (5 đến 10 phút)"""
-    return random.randint(5, 10)  # Luck nhận ngẫu nhiên trong khoảng từ 5 đến 10 phút
 
 def weighted_random_roll(luck):
     adjusted_roles = [(r[0], r[1] * (luck if r[2] >= 4 else 1), *r[2:]) for r in game_roles]
@@ -454,25 +449,5 @@ async def money(ctx, amount: int, user_input: str):
         f"✅ Đã {action} {abs(amount)}$ cho {user.display_name}!\n"
         f"💰 Số dư mới: {player_data[user_id]['money']}$"
     )
-@bot.command()
-async def daily(ctx):
-    user_id = str(ctx.author.id)
-    init_player(user_id)
-    pdata = player_data[user_id]
-
-    # Kiểm tra xem người dùng đã nhận lucky hôm nay chưa
-    if not can_receive_daily(user_id):
-        return await ctx.send("❌ Bạn đã nhận lucky hôm nay rồi! Hãy đợi đến ngày mai.", delete_after=5)
-
-    # Tính toán lucky ngẫu nhiên từ 5 đến 10 phút
-    lucky_time = random.randint(5, 10) * 60  # Thời gian lucky từ 5 đến 10 phút (tính theo giây)
-
-    # Cập nhật luck cho người dùng
-    pdata["luck"] += random.uniform(0.1, 0.2)  # Tăng thêm một chút luck
-
-    # Lưu thời gian nhận lucky
-    update_daily_time(user_id)
-
-    await ctx.send(f"🎉 Chúc mừng! Bạn đã nhận lucky +{lucky_time//60} phút! Thời gian hiệu lực: {lucky_time//60} phút.", delete_after=5)
 # ==================== CHẠY BOT ====================
 bot.run(os.getenv("TOKEN"))
