@@ -73,7 +73,6 @@ def init_player(user_id):
             "roles": [],
             "active_role": None,
             "luck": 1.0,
-            "luck_daily": 0.0,  # Thêm trường lucky từ daily
             "roll_count": 0
         }
     else:
@@ -82,7 +81,6 @@ def init_player(user_id):
             "roles": [],
             "active_role": None,
             "luck": 1.0,
-            "luck_daily": 0.0,
             "roll_count": 0
         }
         for key, value in default_data.items():
@@ -468,9 +466,9 @@ async def daily(ctx):
 
     # Tính toán lucky ngẫu nhiên từ 5 đến 10 phút
     lucky_time = random.randint(5, 10) * 60  # Thời gian lucky từ 5 đến 10 phút (tính theo giây)
-    
-    # Cập nhật lucky_daily cho người dùng
-    pdata["luck_daily"] += random.uniform(0.1, 0.2)  # Tăng thêm một chút luck từ daily
+
+    # Cập nhật luck cho người dùng
+    pdata["luck"] += random.uniform(0.1, 0.2)  # Tăng thêm một chút luck
 
     # Lưu thời gian nhận lucky
     update_daily_time(user_id)
