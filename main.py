@@ -5,6 +5,7 @@ import random
 import time
 import json
 import os
+import datetime
 from keep_alive import keep_alive
 
 # ==================== Khởi động Flask server ====================
@@ -72,7 +73,8 @@ def init_player(user_id):
             "roles": [],
             "active_role": None,
             "luck": 1.0,
-            "roll_count": 0
+            "roll_count": 0,
+            "last_daily_time": 0  # Thêm trường lưu thời gian nhận daily
         }
     else:
         default_data = {
@@ -80,12 +82,17 @@ def init_player(user_id):
             "roles": [],
             "active_role": None,
             "luck": 1.0,
-            "roll_count": 0
+            "roll_count": 0,
+            "last_daily_time": 0
         }
         for key, value in default_data.items():
             if key not in player_data[str(user_id)]:
                 player_data[str(user_id)][key] = value
     save_game_data()
+    
+def get_daily_luck():
+    """Tính toán và trả về mức luck ngẫu nhiên (5 đến 10 phút)"""
+    return random.randint(5, 10)  # Luck nhận ngẫu nhiên trong khoảng từ 5 đến 10 phút
 
 def weighted_random_roll(luck):
     adjusted_roles = [(r[0], r[1] * (luck if r[2] >= 4 else 1), *r[2:]) for r in game_roles]
@@ -446,6 +453,32 @@ async def money(ctx, amount: int, user_input: str):
         f"✅ Đã {action} {abs(amount)}$ cho {user.display_name}!\n"
         f"💰 Số dư mới: {player_data[user_id]['money']}$"
     )
+@bot.command()
+async def daily(ctx):
+    user_id = str(ctx.author.id)
+    init_player(user_id)
+    pdata = player_data[user_id]
+    
+    # Xác định thời gian hiện tại (UTC+7)
+    now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
+    
+    # Kiểm tra thời gian đã nhận daily
+    last_daily_time = pdata.get("last_daily_time", 0)
+    time_since_last_daily = (now - datetime.datetime.utcfromtimestamp(last_daily_time)).total_seconds()
 
+    # Nếu người chơi chưa nhận daily trong ngày, cho phép nhận thưởng
+    if time_since_last_daily >= 86400:  # 86400 giây = 24 giờ
+        luck_gain = get_daily_luck()  # Tính toán lượng luck nhận được
+        pdata["luck"] += luck_gain / 10  # Cộng thêm vào luck (chia cho 10 để không quá nhanh)
+        pdata["last_daily_time"] = now.timestamp()  # Lưu lại thời gian nhận daily
+        save_game_data()
+
+        await ctx.send(f"✅ Bạn đã nhận {luck_gain} phút Luck (tăng {luck_gain / 10:.1f} Luck) từ Daily! 🍀")
+    else:
+        # Thông báo thời gian chờ
+        time_left = 86400 - time_since_last_daily  # Thời gian còn lại để nhận daily
+        hours_left = int(time_left // 3600)
+        minutes_left = int((time_left % 3600) // 60)
+        await ctx.send(f"⏳ Bạn đã nhận Daily hôm nay rồi! Vui lòng quay lại sau {hours_left} giờ {minutes_left} phút.")
 # ==================== CHẠY BOT ====================
 bot.run(os.getenv("TOKEN"))
