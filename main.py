@@ -448,7 +448,4 @@ async def money(ctx, amount: int, user_input: str):
     )
 
 # ==================== CHẠY BOT ====================
-TOKEN = os.getenv('DISCORD_TOKEN')
-
-if __name__ == "__main__":
     bot.run(TOKEN)
