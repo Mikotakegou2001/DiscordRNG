@@ -73,8 +73,8 @@ def init_player(user_id):
             "roles": [],
             "active_role": None,
             "luck": 1.0,
-            "roll_count": 0,
-            "last_daily_time": 0  # Thêm trường lưu thời gian nhận daily
+            "luck_daily": 0.0,  # Thêm trường lucky từ daily
+            "roll_count": 0
         }
     else:
         default_data = {
@@ -82,8 +82,8 @@ def init_player(user_id):
             "roles": [],
             "active_role": None,
             "luck": 1.0,
-            "roll_count": 0,
-            "last_daily_time": 0
+            "luck_daily": 0.0,
+            "roll_count": 0
         }
         for key, value in default_data.items():
             if key not in player_data[str(user_id)]:
@@ -322,6 +322,9 @@ async def rng(ctx):
     init_player(user_id)
     pdata = player_data[user_id]
 
+    # Tính tổng luck (luck từ shop và lucky daily)
+    total_luck = pdata['luck'] + pdata['luck_daily']
+
     active_role = "Chưa có"
     if pdata.get("active_role"):
         role_info = get_role_info(pdata["active_role"])
@@ -339,7 +342,7 @@ async def rng(ctx):
             f"Xin chào, {ctx.author.display_name}!\n"
             f"👑 Role: {active_role}\n"
             f"💰 Số dư: {pdata['money']}$\n"
-            f"🍀 Luck: {pdata.get('luck', 1.0):.1f}"
+            f"🍀 Luck: {total_luck:.1f} (+luck daily: {pdata['luck_daily']:.1f})"
         ),
         color=0x00ff00
     )
@@ -458,27 +461,20 @@ async def daily(ctx):
     user_id = str(ctx.author.id)
     init_player(user_id)
     pdata = player_data[user_id]
-    
-    # Xác định thời gian hiện tại (UTC+7)
-    now = datetime.datetime.utcnow() + datetime.timedelta(hours=7)
-    
-    # Kiểm tra thời gian đã nhận daily
-    last_daily_time = pdata.get("last_daily_time", 0)
-    time_since_last_daily = (now - datetime.datetime.utcfromtimestamp(last_daily_time)).total_seconds()
 
-    # Nếu người chơi chưa nhận daily trong ngày, cho phép nhận thưởng
-    if time_since_last_daily >= 86400:  # 86400 giây = 24 giờ
-        luck_gain = get_daily_luck()  # Tính toán lượng luck nhận được
-        pdata["luck"] += luck_gain / 10  # Cộng thêm vào luck (chia cho 10 để không quá nhanh)
-        pdata["last_daily_time"] = now.timestamp()  # Lưu lại thời gian nhận daily
-        save_game_data()
+    # Kiểm tra xem người dùng đã nhận lucky hôm nay chưa
+    if not can_receive_daily(user_id):
+        return await ctx.send("❌ Bạn đã nhận lucky hôm nay rồi! Hãy đợi đến ngày mai.", delete_after=5)
 
-        await ctx.send(f"✅ Bạn đã nhận {luck_gain} phút Luck (tăng {luck_gain / 10:.1f} Luck) từ Daily! 🍀")
-    else:
-        # Thông báo thời gian chờ
-        time_left = 86400 - time_since_last_daily  # Thời gian còn lại để nhận daily
-        hours_left = int(time_left // 3600)
-        minutes_left = int((time_left % 3600) // 60)
-        await ctx.send(f"⏳ Bạn đã nhận Daily hôm nay rồi! Vui lòng quay lại sau {hours_left} giờ {minutes_left} phút.")
+    # Tính toán lucky ngẫu nhiên từ 5 đến 10 phút
+    lucky_time = random.randint(5, 10) * 60  # Thời gian lucky từ 5 đến 10 phút (tính theo giây)
+    
+    # Cập nhật lucky_daily cho người dùng
+    pdata["luck_daily"] += random.uniform(0.1, 0.2)  # Tăng thêm một chút luck từ daily
+
+    # Lưu thời gian nhận lucky
+    update_daily_time(user_id)
+
+    await ctx.send(f"🎉 Chúc mừng! Bạn đã nhận lucky +{lucky_time//60} phút! Thời gian hiệu lực: {lucky_time//60} phút.", delete_after=5)
 # ==================== CHẠY BOT ====================
 bot.run(os.getenv("TOKEN"))
