@@ -4,17 +4,22 @@ from main import bot  # import bot từ main.py
 
 start_time = datetime.datetime.utcnow()
 
-@bot.command()
-async def status(ctx):
-    uptime = datetime.datetime.utcnow() - start_time
-    hours, remainder = divmod(int(uptime.total_seconds()), 3600)
-    minutes, seconds = divmod(remainder, 60)
-    uptime_str = f"{hours}h {minutes}m {seconds}s"
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+        
+# Lệnh status (mới)
+    if message.content.lower() == "!status":
+        uptime = datetime.datetime.utcnow() - start_time
+        h, r = divmod(int(uptime.total_seconds()), 3600)
+        m, s = divmod(r, 60)
+        embed = discord.Embed(
+            title="Trạng thái Bot",
+            description=f"✅ Bot đang chạy\n⏱ Thời gian chạy: **{h}h {m}m {s}s**",
+            color=discord.Color.blue()
+        )
+        await message.channel.send(embed=embed)
 
-    embed = discord.Embed(
-        title="Trạng thái Bot",
-        description=f"✅ Bot đang chạy\n⏱ Thời gian chạy: **{uptime_str}**",
-        color=discord.Color.blue()
-    )
-    await ctx.send(embed=embed)
+    await bot.process_commands(message)
     
