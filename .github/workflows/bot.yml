@@ -1,8 +1,8 @@
 name: Run Discord Bot (Loop)
 
 on:
-  workflow_dispatch: # chạy khi bấm tay
-  push:              # chạy khi update code
+  workflow_dispatch:  # chạy khi bấm tay
+  push:               # chạy khi update code
 
 jobs:
   run:
@@ -16,7 +16,9 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run bot in loop
         env:
