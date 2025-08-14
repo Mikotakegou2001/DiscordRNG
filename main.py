@@ -6,6 +6,7 @@ import time
 import json
 import os
 from keep_alive import keep_alive
+import status_command
 
 # ==================== Khởi động Flask server ====================
 keep_alive()
