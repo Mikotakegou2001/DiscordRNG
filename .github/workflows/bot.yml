@@ -1,0 +1,30 @@
+name: Run Discord Bot (Loop)
+
+on:
+  workflow_dispatch: # chạy khi bấm tay
+  push:              # chạy khi update code
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot in loop
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+        run: |
+          while true; do
+            echo "Starting Discord bot..."
+            python main.py
+            echo "Bot stopped. Restarting in 5 seconds..."
+            sleep 5
+          done
