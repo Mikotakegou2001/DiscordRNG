@@ -1,6 +1,5 @@
-# status_command.py
+import discord
 import datetime
-from main import bot  # import bot từ main.py
 
 start_time = datetime.datetime.utcnow()
 
@@ -8,9 +7,9 @@ start_time = datetime.datetime.utcnow()
 async def on_message(message):
     if message.author.bot:
         return
-        
-# Lệnh status (mới)
-    if message.content.lower() == "!status":
+
+    # Lệnh status không dùng prefix
+    if message.content.lower() == "status":
         uptime = datetime.datetime.utcnow() - start_time
         h, r = divmod(int(uptime.total_seconds()), 3600)
         m, s = divmod(r, 60)
@@ -21,5 +20,5 @@ async def on_message(message):
         )
         await message.channel.send(embed=embed)
 
+    # Giữ lại xử lý tin nhắn khác của bot
     await bot.process_commands(message)
-    
