@@ -7,6 +7,7 @@ import json
 import os
 from keep_alive import keep_alive
 import status_command
+bot.load_extension("status_command")
 
 # ==================== Khởi động Flask server ====================
 keep_alive()
